@@ -1,0 +1,12 @@
+# dependency directories
+node_modules/
+
+# dotenv environment variables file
+.env
+
+# test sessions
+*session.json
+.wwebjs_auth/
+
+# local version cache
+.wwebjs_cache/

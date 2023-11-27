@@ -38,9 +38,11 @@ function startServer() {
                     })
                 });
 
-                app.locals.clients[phoneNumber] = client.initialize();
+                app.locals.clients[phoneNumber] = client;
 
-                await app.locals.clients[phoneNumber];
+                client.initialize();
+
+                return client;
             }
             return prevClient;
         } catch (error) {

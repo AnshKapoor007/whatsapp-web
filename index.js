@@ -43,12 +43,20 @@ app.get('/api/initialize-client/:phoneNumber', async (req, res) => {
         if (!client) {
             const newClient = await initializeClient(phoneNumber);
 
+            let responseSent = false;
+
             newClient.on('qr', qr => {
-                res.send({ qr, status: 'QR_CODE_REQUIRED' });
+                if (!responseSent) {
+                    responseSent = true;
+                    res.send({ qr, status: 'QR_CODE_REQUIRED' });
+                }
             });
 
             newClient.on('ready', () => {
-                res.send({ status: 'CLIENT_READY' });
+                if (!responseSent) {
+                    responseSent = true;
+                    res.send({ status: 'CLIENT_READY' });
+                }
             });
         } else {
             res.send({ status: 'CLIENT_READY' });

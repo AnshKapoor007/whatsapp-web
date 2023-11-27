@@ -38,11 +38,9 @@ function startServer() {
                     })
                 });
 
-                app.locals.clients[phoneNumber] = client;
+                app.locals.clients[phoneNumber] = client.initialize();
 
-                client.initialize();
-
-                return client;
+                await app.locals.clients[phoneNumber];
             }
             return prevClient;
         } catch (error) {

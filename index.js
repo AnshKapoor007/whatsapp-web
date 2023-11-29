@@ -61,21 +61,15 @@ function startServer() {
         try {
             const newClient = await initializeClient(phoneNumber);
 
-            let responseSent = false;
-
-            newClient.on('qr', qr => {
-                if (!responseSent) {
-                    responseSent = true;
+            try {
+                await newClient.getState();
+                res.send({ status: 'CLIENT_READY' });
+            } catch (err) {
+                newClient.on('qr', qr => {
                     res.send({ qr, status: 'QR_CODE_REQUIRED' });
-                }
-            });
 
-            newClient.on('ready', () => {
-                if (!responseSent) {
-                    responseSent = true;
-                    res.send({ status: 'CLIENT_READY' });
-                }
-            });
+                });
+            }
         } catch (error) {
             res.status(500).send({ error: 'ERROR CHECKING CLIENT STATUS' });
         }
@@ -89,7 +83,13 @@ function startServer() {
             const client = app.locals.clients[senderPhoneNumber];
 
             if (!client) {
-                return res.status(404).send({ error: 'CLIENT NOT FOUND' });
+                client = await initializeClient(senderPhoneNumber);
+
+                try {
+                    await client.getState();
+                } catch (err) {
+                    res.send({ status: 'CLIENT_SESSION_EXPIRED' });
+                }
             }
 
             const sanitized_number = targetPhoneNumber.toString().replace(/[- )(]/g, "");
@@ -99,9 +99,7 @@ function startServer() {
             const number_details = await client.getNumberId(final_number);
 
             if (number_details) {
-                for (let i = 0; i < 10; i++) {
-                    await client.sendMessage(number_details._serialized, message);
-                }
+                await client.sendMessage(number_details._serialized, message);
                 res.status(200).send({ message: 'MESSAGE SENT SUCCESSFULLY' });
             } else {
                 res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });

@@ -87,22 +87,22 @@ function startServer() {
 
                 try {
                     await client.getState();
+                    
+                    const sanitized_number = targetPhoneNumber.toString().replace(/[- )(]/g, "");
+
+                    const final_number = `91${sanitized_number.substring(sanitized_number.length - 10)}`;
+
+                    const number_details = await client.getNumberId(final_number);
+
+                    if (number_details) {
+                        await client.sendMessage(number_details._serialized, message);
+                        res.status(200).send({ message: 'MESSAGE SENT SUCCESSFULLY' });
+                    } else {
+                        res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });
+                    }
                 } catch (err) {
                     res.send({ status: 'CLIENT_SESSION_EXPIRED' });
                 }
-            }
-
-            const sanitized_number = targetPhoneNumber.toString().replace(/[- )(]/g, "");
-
-            const final_number = `91${sanitized_number.substring(sanitized_number.length - 10)}`;
-
-            const number_details = await client.getNumberId(final_number);
-
-            if (number_details) {
-                await client.sendMessage(number_details._serialized, message);
-                res.status(200).send({ message: 'MESSAGE SENT SUCCESSFULLY' });
-            } else {
-                res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });
             }
         } catch (error) {
             console.log(error)

@@ -61,13 +61,26 @@ function startServer() {
         try {
             const newClient = await initializeClient(phoneNumber);
 
-            try {
-                console.log(await newClient.getState());
-                res.send({ status: 'CLIENT_READY' });
-            } catch (err) {
-                newClient.on('qr', qr => {
-                    res.send({ qr, status: 'QR_CODE_REQUIRED' });
+            let responseSent = false;
+            let client_ready = false;
 
+            if (client_ready) {
+                res.send({ status: 'CLIENT_READY' });
+            }
+            else {
+                newClient.on('qr', qr => {
+                    if (!responseSent) {
+                        responseSent = true;
+                        res.send({ qr, status: 'QR_CODE_REQUIRED' });
+                    }
+                });
+
+                newClient.on('ready', () => {
+                    client_ready = true;
+                    if (!responseSent) {
+                        responseSent = true;
+                        res.send({ status: 'CLIENT_READY' });
+                    }
                 });
             }
         } catch (error) {
@@ -80,32 +93,27 @@ function startServer() {
         const { targetPhoneNumber, message } = req.body;
 
         try {
-            let client = app.locals.clients[senderPhoneNumber];
+            const client = app.locals.clients[senderPhoneNumber];
 
             if (!client) {
-                client = await initializeClient(senderPhoneNumber);
+                return res.status(404).send({ error: 'CLIENT NOT FOUND' });
+            }
 
-                try {
-                    await client.getState();
-                    
-                    const sanitized_number = targetPhoneNumber.toString().replace(/[- )(]/g, "");
+            const sanitized_number = targetPhoneNumber.toString().replace(/[- )(]/g, "");
 
-                    const final_number = `91${sanitized_number.substring(sanitized_number.length - 10)}`;
+            const final_number = `91${sanitized_number.substring(sanitized_number.length - 10)}`;
 
-                    const number_details = await client.getNumberId(final_number);
+            const number_details = await client.getNumberId(final_number);
 
-                    if (number_details) {
-                        await client.sendMessage(number_details._serialized, message);
-                        res.status(200).send({ message: 'MESSAGE SENT SUCCESSFULLY' });
-                    } else {
-                        res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });
-                    }
-                } catch (err) {
-                    res.send({ status: 'CLIENT_SESSION_EXPIRED' });
+            if (number_details) {
+                for (let i = 0; i < 10; i++) {
+                    await client.sendMessage(number_details._serialized, message);
                 }
+                res.status(200).send({ message: 'MESSAGE SENT SUCCESSFULLY' });
+            } else {
+                res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });
             }
         } catch (error) {
-            console.log(error)
             res.status(500).send({ error: 'ERROR SENDING MESSAGE' });
         }
     });

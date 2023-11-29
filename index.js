@@ -62,7 +62,7 @@ function startServer() {
             const newClient = await initializeClient(phoneNumber);
 
             try {
-                await newClient.getState();
+                console.log(await newClient.getState());
                 res.send({ status: 'CLIENT_READY' });
             } catch (err) {
                 newClient.on('qr', qr => {

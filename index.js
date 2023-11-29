@@ -80,7 +80,7 @@ function startServer() {
         const { targetPhoneNumber, message } = req.body;
 
         try {
-            const client = app.locals.clients[senderPhoneNumber];
+            let client = app.locals.clients[senderPhoneNumber];
 
             if (!client) {
                 client = await initializeClient(senderPhoneNumber);

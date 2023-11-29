@@ -51,6 +51,10 @@ function startServer() {
         }
     }
 
+    app.get('/', async (req, res) => {
+        res.send('Hello World');
+    });
+
     app.get('/api/initialize-client/:phoneNumber', async (req, res) => {
         const phoneNumber = req.params.phoneNumber;
 

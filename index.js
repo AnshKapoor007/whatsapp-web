@@ -25,6 +25,7 @@ function startServer() {
     const store = new MongoStore({ mongoose: mongoose });
 
     app.locals.clients = {};
+    app.locals.client_ready = {};
 
     async function initializeClient(phoneNumber) {
         try {
@@ -40,6 +41,7 @@ function startServer() {
                 });
 
                 app.locals.clients[phoneNumber] = client;
+                app.locals.client_ready[phoneNumber] = false;
 
                 client.initialize();
 
@@ -62,9 +64,8 @@ function startServer() {
             const newClient = await initializeClient(phoneNumber);
 
             let responseSent = false;
-            let client_ready = false;
 
-            if (client_ready) {
+            if (app.locals.client_ready[phoneNumber]) {
                 res.send({ status: 'CLIENT_READY' });
             }
             else {
@@ -76,7 +77,7 @@ function startServer() {
                 });
 
                 newClient.on('ready', () => {
-                    client_ready = true;
+                    app.locals.client_ready[phoneNumber] = true;
                     if (!responseSent) {
                         responseSent = true;
                         res.send({ status: 'CLIENT_READY' });

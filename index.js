@@ -105,6 +105,7 @@ function startServer() {
                 res.status(200).send({ message: 'UNABLE TO SEND MESSAGE' });
             }
         } catch (error) {
+            console.log(error)
             res.status(500).send({ error: 'ERROR SENDING MESSAGE' });
         }
     });

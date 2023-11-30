@@ -83,6 +83,11 @@ function startServer() {
                         res.send({ status: 'CLIENT_READY' });
                     }
                 });
+
+                newClient.on('disconnected', () => {
+                    delete app.locals.clients[phoneNumber];
+                    delete app.locals.client_ready[phoneNumber];
+                });
             }
         } catch (error) {
             res.status(500).send({ error: 'ERROR CHECKING CLIENT STATUS' });
